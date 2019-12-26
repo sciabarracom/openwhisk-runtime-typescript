@@ -1,4 +1,4 @@
-let main = require("./exec__")
+let main = require("./main__")
 let fs = require("fs")
 
 process.stdin.setEncoding('utf8');

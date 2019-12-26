@@ -19,13 +19,15 @@
 */
 const path = require("path")
 const fs = require("fs")
+const execFileSync = require('child_process').execFileSync;
+
 
 // write a file creating intermediate directories
 function write_file(file, body, executable) {
     fs.mkdirSync(path.dirname(file), {recursive: true})
     fs.writeFileSync(file, body)
     if(executable)
-        fs.chmodSync(path, 0755)
+        fs.chmodSync(file, 0755)
 }
 
 // copy a file eventually replacing a substring
@@ -63,9 +65,10 @@ function sources(launcher, main, src_dir) {
     }
     if(!("files" in config)) config["files"] = []
     if(!("compilerOptions" in config)) config["compilerOptions"] = {}
-    config["compilerOptions"]["module"] = "system" 
-    config["compilerOptions"]["removeComments"] = true
-    config["compilerOptions"]["sourceMap"] = true
+    //config["compilerOptions"]["module"] = "system" 
+    //config["compilerOptions"]["removeComments"] = true
+    //config["compilerOptions"]["sourceMap"] = true
+    config["compilerOptions"]["outDir"] = "../bin/"
      
     // copy main src file if any (and use it as main)
     var src_file = src_dir+"/exec"
@@ -80,15 +83,22 @@ function sources(launcher, main, src_dir) {
        src_dir+"/exec__.ts",
       `require("./main__")`,
       `require("./`+main+`")`)
-    config["files"].push("exec__.ts")
 
     // complete tsconfig.json
-    config["compilerOptions"]["outFile"] = "../bin/exec.js"
+    config["files"].push("exec__.ts")
     write_file(src_config, JSON.stringify(config))
 }
 
-function build(src, bin) {
-    console.log(src, bin)
+function build(src_dir, bin_dir) {
+    try {
+        execFileSync("tsc", [], {
+            "cwd": src_dir
+        })
+        write_file(bin_dir+"/exec", 
+                  "#!/bin/bash\nnode exec__.js\n", true)
+    } catch(err) {
+        console.log(err.message)
+    }
 }
 
 if(process.argv.length<4) {
