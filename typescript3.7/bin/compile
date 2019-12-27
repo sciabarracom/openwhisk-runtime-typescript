@@ -95,7 +95,9 @@ function build(src_dir, bin_dir) {
             "cwd": src_dir
         })
         write_file(bin_dir+"/exec", 
-                  "#!/bin/bash\nnode exec__.js\n", true)
+            "#!/bin/bash\n"+
+            'cd "$(dirname $0)"\n'+
+            "node exec__.js\n", true)
     } catch(err) {
         console.log(err.message)
     }

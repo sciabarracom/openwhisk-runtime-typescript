@@ -58,4 +58,4 @@ ARG __LAMBDA_COMPAT
 ENV __LAMBDA_COMPAT=$__LAMBDA_COMPAT
 
 # The flag --experimental-worker enables worker threads, see https://nodejs.org/docs/latest-v10.x/api/worker_threads.html
-ENTRYPOINT node --experimental-worker --expose-gc app.js
+ENTRYPOINT ["/bin/proxy"]
