@@ -57,5 +57,7 @@ EXPOSE 8080
 ARG __LAMBDA_COMPAT
 ENV __LAMBDA_COMPAT=$__LAMBDA_COMPAT
 
-# The flag --experimental-worker enables worker threads, see https://nodejs.org/docs/latest-v10.x/api/worker_threads.html
+COPY bin/compile /bin/compile
+COPY lib/launcher.ts /lib/launcher.ts
+ENV OW_COMPILER=/bin/compile
 ENTRYPOINT ["/bin/proxy"]

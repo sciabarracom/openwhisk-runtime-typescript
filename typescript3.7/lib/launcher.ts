@@ -1,6 +1,27 @@
 const main = require("./main__")
 const readline = require('readline');
 const fs = require("fs")
+const os = require("os")
+
+function vscodeDebug() {
+  let ifaces = os.networkInterfaces()
+  for(let iface of Object.keys(ifaces)) {
+    for(let ip of ifaces[iface]) {
+      if(!ip.internal) {
+        return {
+          "type": "node",
+          "request": "attach",
+          "name": process.env["__OW_ACTION_NAME"],
+          "address": ip.address,
+          "port": 8081,
+          "localRoot": "${workspaceFolder}",
+          "remoteRoot": __dirname
+        }
+      }
+    }
+  }
+  return {"error": "cannot find external interface"}
+}
 
 async function actionLoop() {
   const out = fs.createWriteStream(null, 
@@ -19,7 +40,15 @@ async function actionLoop() {
             process.env[envar] = args[key]
           }
       }
-      let result = main.main(value)
+      let result = {}
+      if("debugWith" in value) {
+        if(value["debugWith"]==="vscode")
+          result = vscodeDebug()
+        else
+          result = {"error": "requesteded unknown debugger"}
+      } else {
+        result = main.main(value)
+      }
       out.write(JSON.stringify(result)+"\n");
     } catch(err) {
       let message = err.message || err.toString()

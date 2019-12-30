@@ -63,22 +63,23 @@ function sources(launcher, main, src_dir) {
     if(fs.existsSync(src_config)) {
         config = JSON.parse(fs.readFileSync(src_config, "utf-8"))
     }
-    if(!("files" in config)) config["files"] = []
-    if(!("compilerOptions" in config)) config["compilerOptions"] = {}
-    //config["compilerOptions"]["module"] = "system" 
-    //config["compilerOptions"]["removeComments"] = true
-    //config["compilerOptions"]["sourceMap"] = true
-    config["compilerOptions"]["outDir"] = "../bin/"
-     
+    if(!("files" in config)) 
+        config["files"] = []
+    if(!("compilerOptions" in config)) 
+        config["compilerOptions"] = {}
+    config["compilerOptions"]["sourceMap"] = true
+    if(!("outDir" in config["compilerOptions"]))
+        config["compilerOptions"]["outDir"] = "."
+ 
     // copy main src file if any (and use it as main)
     var src_file = src_dir+"/exec"
-    if(fs.existsSync(src_file)){
-        fs.renameSync(src_file, src_dir+"/main__.ts")
-        config["files"].push("main__.ts")
-        main = "main__"
+    var tgt_file = src_dir+"/"+main+".ts"
+    if(fs.existsSync(src_file) && !fs.existsSync(tgt_file)){
+        fs.renameSync(src_file, tgt_file)
+        config["files"].push(main+".ts")
     }
 
-    // copy launcher
+    // copy launcher and replace main
     copy_replace(launcher, 
        src_dir+"/exec__.ts",
       `require("./main__")`,
@@ -94,10 +95,13 @@ function build(src_dir, bin_dir) {
         execFileSync("tsc", [], {
             "cwd": src_dir
         })
-        write_file(bin_dir+"/exec", 
+        write_file(src_dir+"/exec", 
             "#!/bin/bash\n"+
             'cd "$(dirname $0)"\n'+
-            "node exec__.js\n", true)
+            "HOST=$(hostname -I | tr -d ' ')\n"+
+            'node --inspect="$HOST:8081" exec__.js\n', true)
+        fs.rmdirSync(bin_dir)
+        fs.renameSync(src_dir, bin_dir)
     } catch(err) {
         console.log(err.message)
     }

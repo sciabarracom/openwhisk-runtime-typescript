@@ -1,36 +1,25 @@
-IMG=action-typescript-v3.7:latest
+PREFIX=docker.io/actionloop
+RTM=action-typescript-v3.7
 INVOKE=python3 ../tools/invoke.py
-PREFIX=docker.io/openwhisk
 
 build:
-	docker build -t $(IMG) .
+	$(MAKE) build-rtm -C ..
 
-push: build
-	docker login
-	docker tag $(IMG) $(PREFIX)/$(IMG) 
-	docker push $(PREFIX)/$(IMG)
-
-clean:
-	docker rmi -f $(IMG)
-
-start: build
-	docker run -p 8080:8080 -ti -v $(PWD):/mnt $(IMG)
+start:
+	docker run -p 8080:8080 -ti -v $(PWD):/mnt $(RTM)
 
 debug: build
-	docker run -p 8080:8080 -p 9229:9229 -ti --entrypoint=/bin/bash \
-	-v $(PWD):/mnt -e OW_COMPILER=/mnt/bin/compile $(IMG) 
+	docker run -p 8080:8080 -p 8081:8081 -ti --entrypoint=/bin/bash \
+	-v $(PWD):/mnt -e OW_COMPILER=/mnt/bin/compile $(RTM) 
 
-.PHONY: build push clean start debug
+.PHONY: build start debug
 
 ## You need to execute make start in another terminal 
-test-simple:
-	$(INVOKE) init simple ../example/simple.ts
-
-
 test-single:
-	$(INVOKE) init hello ../example/hello.py
-	$(INVOKE) run '{}'
-	$(INVOKE) run '{"name":"Mike"}'
+	$(INVOKE) init main ../example/main.ts
+	#$(INVOKE) run '{}'
+	#$(INVOKE) run '{"name":"Mike"}'
+
 
 test-src-zip:
 	$(MAKE) -C ../example src.zip
