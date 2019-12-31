@@ -1,5 +1,5 @@
 PREFIX=docker.io/actionloop
-RTM=action-typescript-v3.7
+RTM=action-nodejs-v12
 INVOKE=python3 ../tools/invoke.py
 
 start:
@@ -13,7 +13,7 @@ debug: build
 
 ## You need to execute make start in another terminal 
 test-single:
-	$(INVOKE) init main ../example/js/main.ts
+	$(INVOKE) init main ../example/js/main.js
 	#$(INVOKE) run '{}'
 	#$(INVOKE) run '{"name":"Mike"}'
 
