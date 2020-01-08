@@ -2,11 +2,11 @@ IMG=action-typescript-v3.7:latest
 ACT=hello-demo-javascript
 PREFIX=actionloop
 
-src.zip: src/hello.js src/main.js
+src.zip: src/hello.js src/main.js package.json
 	zip -r src.zip $^
 
 bin.zip: src.zip
-	docker run -i $(IMG) -compile src/main <src.zip >bin.zip
+	docker run -i $(IMG) -compile main <src.zip >bin.zip
 
 clean:
 	-rm src.zip bin.zip

@@ -40,28 +40,34 @@ function copy_replace(src, dst, match, replacement) {
 function deext(filename) {
     var pos = filename.lastIndexOf(".")
     filename = pos > -1 ? filename.substring(0, pos) : filename
+    return filename
 }
 
-// resolve dependencies from package.json - return the main
-function dependencies(src_dir, main) {
+// resolve dependencies from package.json - return the main file
+function dependencies(src_dir) {
   var pkg_config = src_dir+"/package.json"
   if(fs.existsSync(pkg_config)) {
-      // TODO: yarn
+     execFileSync("yarn", [], {
+          "cwd": src_dir
+     })
      var config = JSON.parse(fs.readFileSync(pkg_config, "utf-8"))
-     if("main" in config)
-        return deext(config["main"])
+     //console.log(config)
+     if("main" in config) {
+         return deext(config["main"])
+     }
   }
-  return main
+  return "main"
 }
 
 // assemble sources
-function sources(launcher, main, src_dir) {
+function sources(launcher, main_file, main_func, src_dir) {
     // init config
     src_config = src_dir+"/tsconfig.json"
     var config = {}
     if(fs.existsSync(src_config)) {
         config = JSON.parse(fs.readFileSync(src_config, "utf-8"))
     }
+
     if(!("files" in config)) 
         config["files"] = []
     if(!("compilerOptions" in config)) 
@@ -72,18 +78,18 @@ function sources(launcher, main, src_dir) {
  
     // copy main src file if any (and use it as main)
     var src_file = src_dir+"/exec"
-    var tgt_file = src_dir+"/"+main+".ts"
+    var tgt_file = src_dir+"/"+main_file+".ts"
     if(fs.existsSync(src_file) && !fs.existsSync(tgt_file)){
-        var re = RegExp('(?<!export\\s+)function\\s+main')
-        copy_replace(src_file, tgt_file, re, "export function main")
-        config["files"].push(main+".ts")
+        var re = RegExp('(?<!export\\s+)function\\s+'+main_func)
+        copy_replace(src_file, tgt_file, re, "export function "+main_func)
+        config["files"].push(main_file+".ts")
     }
 
     // copy launcher and replace main
     copy_replace(launcher, 
        src_dir+"/exec__.ts",
-      `require("./main__")`,
-      `require("./`+main+`")`)
+      'require("./main__").main',
+      'require("./'+main_file+'").'+main_func)
 
     // complete tsconfig.json
     config["files"].push("exec__.ts")
@@ -98,10 +104,13 @@ function build(src_dir, bin_dir) {
             "cwd": bin_dir
         })
         write_file(bin_dir+"/exec", 
-            "#!/bin/bash\n"+
-            'cd "$(dirname $0)"\n'+
-            "HOST=$(hostname -I | tr -d ' ')\n"+
-            'node --inspect="$HOST:8081" exec__.js\n', true)
+         '#!/bin/bash\n'+
+         'cd "$(dirname $0)"\n'+
+         'HOST=$(hostname -I | tr -d " ")\n'+
+         'if [ -z "$__OW_DEBUG_PORT"]\n' +
+         'then node exec__.js\n'+
+         'else node --inspect="$HOST:$__OW_DEBUG_PORT" exec__.js\n'+
+         'fi\n', true)
     } catch(err) {
         console.log(err.message)
     }
@@ -113,12 +122,13 @@ function compile() {
         process.exit(1)
     }
     var launcher =  path.dirname(path.dirname(process.argv[1]))+"/lib/launcher.ts"
-    var main = process.argv[2]
+    var main_func = process.argv[2]
     var src_dir = path.resolve(process.argv[3])
     var bin_dir = path.resolve(process.argv[4])
-    var main = dependencies(src_dir, main)
-    sources(launcher, main, src_dir)
-    build(src_dir, bin_dir)    
+    var main_file = dependencies(src_dir)
+    //console.log(main_file, main_func)
+    sources(launcher, main_file, main_func, src_dir)
+    build(src_dir, bin_dir)
 }
 
 if(require.main === module) {

@@ -40,27 +40,28 @@ class ActionLoopTypescriptBasicTests extends BasicActionRunnerTests with WskActo
 
   override val testNotReturningJson =
     TestConfig("""
-                 |def main(args):
+                 |export function main(args) {
                  |    return "not a json object"
+                 |}
                """.stripMargin)
 
-  override val testEcho = TestConfig("""|import sys
-       |def main(args):
-       |   print("hello stdout", file=sys.stdout)
-       |   print("hello stderr", file=sys.stderr)
+  override val testEcho = TestConfig("""|export function main(args) {
+       |   console.log("hello stdout")
+       |   console.error("hello stderr")
        |   return args
+       |}
     """.stripMargin)
 
-  override val testUnicode = TestConfig("""|def main(args):
-       |  delimiter = args['delimiter']
-       |  msg = u"%s ☃ %s" % (delimiter, delimiter)
-       |  print(msg)
+  override val testUnicode = TestConfig("""|export function main(args) {
+       |  let delimiter = args['delimiter']
+       |  let msg = delimiter+" ☃ "+delimiter
+       |  console.log(msg)
        |  return { "winter": msg }
+       |}
     """.stripMargin)
 
-  override val testEnv = TestConfig("""|import os
-       |def main(args):
-       |  env = os.environ
+  override val testEnv = TestConfig("""|export function main(args) {
+       |  let env = process.env
        |  return {
        |    "api_host":      env["__OW_API_HOST"],
        |    "api_key":       env["__OW_API_KEY"],
@@ -69,19 +70,23 @@ class ActionLoopTypescriptBasicTests extends BasicActionRunnerTests with WskActo
        |    "action_name":   env["__OW_ACTION_NAME"],
        |    "deadline":      env["__OW_DEADLINE"]
        |  }
+       |}
     """.stripMargin)
 
-  override val testInitCannotBeCalledMoreThanOnce = TestConfig(s"""|def main(args):
+  override val testInitCannotBeCalledMoreThanOnce = TestConfig(s"""|export function main(args) {
         |  return args
+        |}
     """.stripMargin)
 
   override val testEntryPointOtherThanMain = TestConfig(
-    s"""|def niam(args):
+    s"""|export function niam(args) {
         |   return args
+        |}
     """.stripMargin,
     main = "niam")
 
-  override val testLargeInput = TestConfig(s"""|def main(args):
+  override val testLargeInput = TestConfig(s"""|export function main(args) {
         |  return args
+        |}
     """.stripMargin)
 }

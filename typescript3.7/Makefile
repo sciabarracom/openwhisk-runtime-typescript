@@ -19,13 +19,13 @@ test-single:
 
 test-src-zip:
 	$(MAKE) -C ../example/ts clean src.zip
-	$(INVOKE) init src/main ../example/ts/src.zip
+	$(INVOKE) init  ../example/ts/src.zip
 	$(INVOKE) run '{}'
 	$(INVOKE) run '{"name":"Mike"}'
 
 test-bin-zip:
 	$(MAKE) -C ../example/ts clean bin.zip
-	$(INVOKE) init src/main ../example/ts/bin.zip
+	$(INVOKE) init ../example/ts/bin.zip
 	$(INVOKE) run '{}'
 	$(INVOKE) run '{"name":"Mike"}'
 

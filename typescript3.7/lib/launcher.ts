@@ -1,4 +1,4 @@
-const main = require("./main__")
+const main = require("./main__").main
 const readline = require('readline');
 const fs = require("fs")
 const os = require("os")
@@ -26,28 +26,29 @@ function vscodeDebug() {
 async function actionLoop() {
   const out = fs.createWriteStream(null, 
     { fd: 3, encoding: "utf8" })
-  process.stdin.setEncoding('utf8');
+    process.stdin.setEncoding('utf8');
   const rl = readline.createInterface({
     input: process.stdin
   });
+  const debugging = "__OW_DEBUG_PORT" in process.env
   for await (const line of rl) {
     try {
       let args = JSON.parse(line)
       let value = args.value || {}
       for (let key in args) {
           if(key !== "value") {
-            let envar = "_OW_"+key.toUpperCase()
+            let envar = "__OW_"+key.toUpperCase()
             process.env[envar] = args[key]
           }
       }
       let result = {}
-      if("debugWith" in value) {
+      if(debugging && "debugWith" in value) {
         if(value["debugWith"]==="vscode")
           result = vscodeDebug()
         else
-          result = {"error": "requesteded unknown debugger"}
+          result = {"error": "requested unknown debugger"}
       } else {
-        result = main.main(value)
+        result = main(value)
       }
       out.write(JSON.stringify(result)+"\n");
     } catch(err) {
