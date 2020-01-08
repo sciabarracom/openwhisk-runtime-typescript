@@ -43,7 +43,7 @@ function deext(filename) {
 }
 
 // resolve dependencies from package.json - return the main
-function dependencies(src_dir) {
+function dependencies(src_dir, main) {
   var pkg_config = src_dir+"/package.json"
   if(fs.existsSync(pkg_config)) {
       // TODO: yarn
@@ -51,7 +51,7 @@ function dependencies(src_dir) {
      if("main" in config)
         return deext(config["main"])
   }
-  return "main"
+  return main
 }
 
 // assemble sources
@@ -66,7 +66,7 @@ function sources(launcher, main, src_dir) {
         config["files"] = []
     if(!("compilerOptions" in config)) 
         config["compilerOptions"] = {}
-    config["compilerOptions"]["sourceMap"] = true
+    config["compilerOptions"]["inlineSourceMap"] = true
     if(!("outDir" in config["compilerOptions"]))
         config["compilerOptions"]["outDir"] = "."
  
@@ -74,7 +74,8 @@ function sources(launcher, main, src_dir) {
     var src_file = src_dir+"/exec"
     var tgt_file = src_dir+"/"+main+".ts"
     if(fs.existsSync(src_file) && !fs.existsSync(tgt_file)){
-        fs.renameSync(src_file, tgt_file)
+        var re = RegExp('(?<!export\\s+)function\\s+main')
+        copy_replace(src_file, tgt_file, re, "export function main")
         config["files"].push(main+".ts")
     }
 
@@ -106,15 +107,20 @@ function build(src_dir, bin_dir) {
     }
 }
 
-if(process.argv.length<4) {
-    console.log("usage: <main-function> <source-dir> <target-dir>")
-    process.exit(1)
+function compile() {
+    if(process.argv.length<4) {
+        console.log("usage: <main-function> <source-dir> <target-dir>")
+        process.exit(1)
+    }
+    var launcher =  path.dirname(path.dirname(process.argv[1]))+"/lib/launcher.ts"
+    var main = process.argv[2]
+    var src_dir = path.resolve(process.argv[3])
+    var bin_dir = path.resolve(process.argv[4])
+    var main = dependencies(src_dir, main)
+    sources(launcher, main, src_dir)
+    build(src_dir, bin_dir)    
 }
 
-var launcher =  path.dirname(path.dirname(process.argv[1]))+"/lib/launcher.ts"
-var main_func = process.argv[2]
-var src_dir = path.resolve(process.argv[3])
-var bin_dir = path.resolve(process.argv[4])
-var main = dependencies(src_dir)
-sources(launcher, main, src_dir)
-build(src_dir, bin_dir)
+if(require.main === module) {
+    compile()
+}
