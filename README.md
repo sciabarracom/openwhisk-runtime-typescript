@@ -18,7 +18,6 @@
 -->
 # TypeScript runtime
 
-DO NOT USE - very work in progress
 
 This is the typescript runtime.
 
@@ -27,9 +26,13 @@ You action can be:
 - a single file
 - multiple files withing a zip
 
-In the zip, you can optionally add a `package.json` and a `tsconfig.json`
+If you have multiple files, a `tsconfig.json` listing the typescript files is mandatory.
 
-If the `package.json` is specified, it will resolve the dependencies using yarn
+In the zip, you can optionally add a `package.json`
 
-If the `tsconfig.json` is specified it will conmpile
+If the `package.json` is specified, it will resolve the dependencies using yarn.
+
+More to come...
+
+
 
