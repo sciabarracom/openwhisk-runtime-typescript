@@ -32,7 +32,7 @@ function write_file(file, body, executable) {
 // copy a file eventually replacing a substring
 function copy_replace(src, dst, match, replacement) {
     var body = fs.readFileSync(src, "utf-8")
-    if(match) 
+    if(match)
         body = body.replace(match, replacement)
     write_file(dst, body)
 }
@@ -68,14 +68,14 @@ function sources(launcher, main_file, main_func, src_dir) {
         config = JSON.parse(fs.readFileSync(src_config, "utf-8"))
     }
 
-    if(!("files" in config)) 
+    if(!("files" in config))
         config["files"] = []
-    if(!("compilerOptions" in config)) 
+    if(!("compilerOptions" in config))
         config["compilerOptions"] = {}
     config["compilerOptions"]["inlineSourceMap"] = true
     if(!("outDir" in config["compilerOptions"]))
         config["compilerOptions"]["outDir"] = "."
- 
+
     // copy main src file if any (and use it as main)
     var src_file = src_dir+"/exec"
     var tgt_file = src_dir+"/"+main_file+".ts"
@@ -86,7 +86,7 @@ function sources(launcher, main_file, main_func, src_dir) {
     }
 
     // copy launcher and replace main
-    copy_replace(launcher, 
+    copy_replace(launcher,
        src_dir+"/exec__.ts",
       'require("./main__").main',
       'require("./'+main_file+'").'+main_func)
@@ -103,7 +103,7 @@ function build(src_dir, bin_dir) {
         execFileSync("tsc", [], {
             "cwd": bin_dir
         })
-        write_file(bin_dir+"/exec", 
+        write_file(bin_dir+"/exec",
          '#!/bin/bash\n'+
          'cd "$(dirname $0)"\n'+
          'HOST=$(hostname -I | tr -d " ")\n'+
